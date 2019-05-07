@@ -3,12 +3,12 @@ Design Pattern
 
 ## There are three main category for design patterns 
 
----> Creational
--> Abstract Factory (families of product objects)
--> Builder (how a composite object gets created)
--> Factory Method (subclass of object that is instantiated)
--> Prototype (Lets you copy existing objects without making your code dependent on their classes)
--> Singleton (Lets you ensure that a class has only one instance, while providing a global access point to this instance)
+### ---> Creational
+### -> Abstract Factory (families of product objects)
+### -> Builder (how a composite object gets created)
+### -> Factory Method (subclass of object that is instantiated)
+### -> Prototype (Lets you copy existing objects without making your code dependent on their classes)
+### -> Singleton (Lets you ensure that a class has only one instance, while providing a global access point to this instance)
 
 # singleton
 
