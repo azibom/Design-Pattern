@@ -5,11 +5,11 @@ Design Pattern
 
 Creational ,Structural and Behavioral
 
-### today we will speack about Creational
+### today we will speak about Creational
 
 ---> Creational
--> Abstract Factory (families of product objects)
--> Builder (how a composite object gets created)
+-> Abstract Factory (Lets you produce families of related objects without specifying their concrete classes)
+-> Builder (Lets you construct complex objects step by step. The pattern allows you to produce different types and representations of an object using the same construction code)
 -> Factory Method (Provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created)
 -> Prototype (Lets you copy existing objects without making your code dependent on their classes)
 -> Singleton (Lets you ensure that a class has only one instance, while providing a global access point to this instance)
@@ -331,4 +331,140 @@ $creatorTwo->getInfo();
 
 ?>
 
+```
+
+# Builder
+
+Imagine a complex object that requires laborious, step-by-step initialization of many fields and nested objects. Such initialization code is usually buried inside a monstrous constructor with lots of parameters. Or even worse: scattered all over the client code.
+
+```php
+<?php
+
+interface SQLQueryBuilder
+{
+    public function select(string $table, array $fields): SQLQueryBuilder;
+
+    public function where(string $field, string $value, string $operator = '='): SQLQueryBuilder;
+
+    public function limit(int $start, int $offset): SQLQueryBuilder;
+
+    // +100 other SQL syntax methods...
+
+    public function getSQL(): string;
+}
+
+class MysqlQueryBuilder implements SQLQueryBuilder
+{
+    protected $query;
+
+    protected function reset(): void
+    {
+        $this->query = new \stdClass;
+    }
+
+    /**
+     * Build a base SELECT query.
+     */
+    public function select(string $table, array $fields): SQLQueryBuilder
+    {
+        $this->reset();
+        $this->query->base = "SELECT " . implode(", ", $fields) . " FROM " . $table;
+        $this->query->type = 'select';
+        return $this;
+    }
+
+    /**
+     * Add a WHERE condition.
+     */
+    public function where(string $field, string $value, string $operator = '='): SQLQueryBuilder
+    {
+        if (!in_array($this->query->type, ['select', 'update'])) {
+            throw new \Exception("WHERE can only be added to SELECT OR UPDATE");
+        }
+        $this->query->where[] = "$field $operator '$value'";
+
+        return $this;
+    }
+
+    /**
+     * Add a LIMIT constraint.
+     */
+    public function limit(int $start, int $offset): SQLQueryBuilder
+    {
+        if (!in_array($this->query->type, ['select'])) {
+            throw new \Exception("LIMIT can only be added to SELECT");
+        }
+        $this->query->limit = " LIMIT " . $start . ", " . $offset;
+
+        return $this;
+    }
+
+    /**
+     * Get the final query string.
+     */
+    public function getSQL(): string
+    {
+        $query = $this->query;
+        $sql = $query->base;
+
+        if (!empty($query->where)) {
+            $sql .= " WHERE " . implode(' AND ', $query->where);
+        }
+
+        if (isset($query->limit)) {
+            $sql .= $query->limit;
+        }
+        $sql .= ";";
+        return $sql;
+    }
+}
+
+/**
+ * This Concrete Builder is compatible with PostgreSQL. While Postgres is very
+ * similar to Mysql, it still has several differences. To reuse the common code,
+ * we extend it from the MySQL builder, while overriding some of the building
+ * steps.
+ */
+class PostgresQueryBuilder extends MysqlQueryBuilder
+{
+    /**
+     * Among other things, PostgreSQL has slightly different LIMIT syntax.
+     */
+    public function limit(int $start, int $offset): SQLQueryBuilder
+    {
+        parent::limit($start, $offset); // write is for validatoin and then use custom our method
+
+        $this->query->limit = " LIMIT " . $start . " OFFSET " . $offset;
+
+        return $this;
+    }
+
+    // + tons of other overrides...
+}
+
+
+$mySQL = new MysqlQueryBuilder;
+
+$query = $mySQL
+    ->select("users", ["email", "password"])
+    ->where("age", 128, ">")
+    ->where("age", 303, "<")
+    ->limit(10, 2032)
+    ->getSQL();
+
+echo $query;
+
+echo "\n\n";
+
+$postgres = new PostgresQueryBuilder;
+
+$query = $postgres
+    ->select("users", ["name", "email", "password"])
+    ->where("age", 18, ">")
+    ->where("age", 30, "<")
+    ->limit(10, 20)
+    ->getSQL();
+
+echo $query;
+?>
 ```
