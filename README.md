@@ -3,12 +3,16 @@ Design Pattern
 
 ## There are three main category for design patterns 
 
-### ---> Creational
-### -> Abstract Factory (families of product objects)
-### -> Builder (how a composite object gets created)
-### -> Factory Method (subclass of object that is instantiated)
-### -> Prototype (Lets you copy existing objects without making your code dependent on their classes)
-### -> Singleton (Lets you ensure that a class has only one instance, while providing a global access point to this instance)
+Creational ,Structural and Behavioral
+
+### today we will speack about Creational
+
+---> Creational
+-> Abstract Factory (families of product objects)
+-> Builder (how a composite object gets created)
+-> Factory Method (Provides an interface for creating objects in a superclass, but allows subclasses to alter the type of objects that will be created)
+-> Prototype (Lets you copy existing objects without making your code dependent on their classes)
+-> Singleton (Lets you ensure that a class has only one instance, while providing a global access point to this instance)
 
 # singleton
 
@@ -160,5 +164,171 @@ print_r($draft);
 
 ?>
 
+
+```
+
+# Factory
+
+Imagine that you’re creating a logistics management application. The first version of your app can only handle transportation by trucks, so the bulk of your code lives inside the Truck class.
+
+After a while, your app becomes pretty popular. Each day you receive dozens of requests from sea transportation companies to incorporate sea logistics into the app.
+
+```php
+<?php
+
+abstract class SocialNetwork
+{
+    // this line says you should have this function if you want to extend me 
+    // which must contains the login ,logout, info and createpost
+    abstract public function getSocialNetwork(): SocialNetworkConnector; 
+
+    // now write what you want
+    public function post($content): void
+    {
+        $network = $this->getSocialNetwork();
+        $network->logIn();
+        $network->createPost($content);
+        $network->logout();
+    }
+
+    public function getInfo(): void
+    {
+        $network = $this->getSocialNetwork();
+        $network->info();
+    }
+}
+
+/**
+ * The Product interface declares behaviors of various types of products.
+ */
+interface SocialNetworkConnector
+{
+    public function logIn(): void;
+
+    public function logOut(): void;
+
+    public function createPost($content): void;
+
+    public function info(): void;
+
+}
+
+
+class Facebook extends SocialNetwork
+{
+    private $login, $password;
+
+    public function __construct(string $login, string $password)
+    {
+        $this->login = $login;
+        $this->password = $password;
+    }
+
+    public function getSocialNetwork(): SocialNetworkConnector
+    {
+        return new FacebookConnector($this->login, $this->password);
+    }
+}
+
+class LinkedIn extends SocialNetwork
+{
+    private $email, $password;
+
+    public function __construct(string $email, string $password)
+    {
+        $this->email = $email;
+        $this->password = $password;
+    }
+
+    public function getSocialNetwork(): SocialNetworkConnector
+    {
+        return new LinkedInConnector($this->email, $this->password);
+    }
+}
+
+/**
+ * This Concrete Product implements the Facebook API.
+ */
+class FacebookConnector implements SocialNetworkConnector
+{
+    private $login, $password;
+
+    public function __construct(string $login, string $password)
+    {
+        $this->login = $login;
+        $this->password = $password;
+    }
+
+    public function logIn(): void
+    {
+        echo "Send HTTP API request to log in user $this->login with " .
+            "password $this->password\n";
+    }
+
+    public function logOut(): void
+    {
+        echo "Send HTTP API request to log out user $this->login\n";
+    }
+
+    public function createPost($content): void
+    {
+        echo "Send HTTP API requests to create a post in Facebook timeline.\n";
+    }
+
+    public function info(): void
+    {
+        echo "That is facebook.\n";
+    }
+}
+
+/**
+ * This Concrete Product implements the LinkedIn API.
+ */
+class LinkedInConnector implements SocialNetworkConnector
+{
+    private $email, $password;
+
+    public function __construct(string $email, string $password)
+    {
+        $this->email = $email;
+        $this->password = $password;
+    }
+
+    public function logIn(): void
+    {
+        echo "Send HTTP API request to log in user $this->email with " .
+            "password $this->password\n";
+    }
+
+    public function logOut(): void
+    {
+        echo "Send HTTP API request to log out user $this->email\n";
+    }
+
+    public function createPost($content): void
+    {
+        echo "Send HTTP API requests to create a post in LinkedIn timeline.\n";
+    }
+
+    public function info(): void
+    {
+        echo "That is LinkedIn.\n";
+    }
+}
+
+// let's test it
+
+echo "Testing ConcreteCreator1:\n";
+$creatorOne = new Facebook("john_smith", "******");
+$creatorOne->post("Hello world!");
+$creatorOne->getInfo();
+
+
+echo "Testing ConcreteCreator2:\n";
+$creatorTwo = new LinkedIn("john_smith@example.com", "******");
+$creatorTwo->post("Hello world!");
+$creatorTwo->getInfo();
+
+?>
 
 ```
